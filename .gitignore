@@ -30,3 +30,11 @@ Thumbs.db
 # ==================== Logs ====================
 logs/
 *.log
+
+# ==================== Config (contains keys & passwords) ====================
+**/application.yml
+**/application-dev.yml
+**/application-prod.yml
+**/application-test.yml
+**/*.properties
+docker-compose.yml
