@@ -1,0 +1,59 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: nesting-assistant
+
+  # H2内存数据库（开发环境）
+  datasource:
+    url: jdbc:h2:mem:nesting_assistant;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+#  JPA配置（已替换为 MyBatis-Plus）
+#  jpa:
+#    hibernate:
+#      ddl-auto: create-drop
+#    show-sql: true
+#    properties:
+#      hibernate:
+#        format_sql: true
+
+  # Redis配置
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+  # Spring AI配置（开发环境使用模拟）
+  ai:
+    openai:
+      api-key: mock-api-key
+      base-url: https://api.openai.com
+      chat:
+        enabled: true
+        options:
+          model: gpt-4o-mini
+          temperature: 0.7
+
+nesting:
+  assistant:
+    system-prompt: |
+      你是一个专业的套料软件智能助手（开发环境）。
+      请帮助用户解答关于套料软件的问题。
+
+    max-tool-calls: 10
+    max-rag-top-k: 5
+
+logging:
+  level:
+    root: INFO
+    com.nesting.assistant: DEBUG
+    org.springframework.ai: DEBUG

@@ -1,0 +1,36 @@
+# ==================== IntelliJ IDEA ====================
+
+# User-specific configurations
+workspace.xml
+tasks.xml
+usage.statistics.xml
+experiments.xml
+
+# Editor-based HTTP Client requests
+/httpRequests/
+
+# Maven home directory
+/mavenHomeManager.xml
+
+# Datasource local storage
+/dataSources/
+/dataSources.local.xml
+
+# Shelf
+/shelf/
+
+# Run configurations (local only)
+/runConfigurations/
+
+# UI theme / editor settings (personal)
+/colors/
+/uiDesigner.xml
+
+# Inspection profiles (local overrides)
+/inspectionProfiles/Project_Default.xml
+
+# Dictionary (personal)
+/dictionaries/
+
+# Gradle local files
+/gradle.xml
