@@ -103,13 +103,13 @@ public class RouterNode implements GraphNode {
         }
 
         String userPrompt = String.format("""
-                用户问题: %s
+                %s
 
                 已处理的专家结果:
                 %s
 
-                请分析当前情况，决定下一步。""",
-                state.getUserMessage(),
+                请分析以上对话历史和当前问题，决定下一步。""",
+                state.buildHistoryPrompt(),
                 state.buildHistorySummary());
 
         String response = chatClient.prompt()

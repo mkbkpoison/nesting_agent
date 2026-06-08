@@ -4,6 +4,7 @@ import com.nesting.assistant.agent.core.AgentResponse;
 import com.nesting.assistant.agent.graph.*;
 import com.nesting.assistant.agent.graph.node.*;
 import com.nesting.assistant.domain.enums.AgentRole;
+import com.nesting.assistant.memory.manager.ConversationManager;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +27,7 @@ public class AgentOrchestrator {
     private final SystemDiagnosisNode systemDiagnosisNode;
     private final KnowledgeRetrievalNode knowledgeRetrievalNode;
     private final OperationNode operationNode;
+    private final ConversationManager conversationManager;
 
     private AgentGraph graph;
     private final GraphExecutor graphExecutor = new GraphExecutor();
@@ -52,10 +54,15 @@ public class AgentOrchestrator {
         log.info("Orchestrating: userId={}, conversationId={}, messageLen={}",
                 userId, conversationId, userMessage != null ? userMessage.length() : 0);
 
+        // 加载对话历史
+        var history = conversationManager.getConversationHistory(
+                userId != null ? userId : "default", conversationId);
+
         GraphState state = GraphState.builder()
                 .conversationId(conversationId)
                 .userId(userId != null ? userId : "default")
                 .userMessage(userMessage)
+                .history(history)
                 .sharedData(new HashMap<>())
                 .maxSteps(10)
                 .build();

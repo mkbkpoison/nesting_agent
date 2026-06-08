@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.ai.chat.messages.Message;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -32,6 +33,10 @@ public class GraphState {
 
     /** 会话ID */
     private String conversationId;
+
+    /** 对话历史（之前轮次的用户消息和助手回复） */
+    @Builder.Default
+    private List<Message> history = new ArrayList<>();
 
     // ==================== 运行时状态 ====================
 
@@ -116,6 +121,32 @@ public class GraphState {
                   .append(r.getErrorMessage()).append("\n");
             }
         }
+        return sb.toString();
+    }
+
+    /** 将对话历史格式化为适合 LLM 提示词的文本 */
+    public String buildHistoryPrompt() {
+        if (history == null || history.isEmpty()) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append("## 对话历史\n");
+        for (Message msg : history) {
+            String role = msg.getMessageType() != null ? msg.getMessageType().getValue() : "unknown";
+            String content = msg.getText();
+            if (content != null && content.length() > 500) {
+                content = content.substring(0, 500) + "...";
+            }
+            if ("user".equals(role) || "USER".equals(role)) {
+                sb.append("用户: ").append(content).append("\n");
+            } else if ("assistant".equals(role) || "ASSISTANT".equals(role)) {
+                sb.append("助手: ").append(content).append("\n");
+            } else {
+                sb.append(role).append(": ").append(content).append("\n");
+            }
+        }
+        sb.append("\n## 当前问题\n");
+        sb.append("用户: ").append(getUserMessage()).append("\n");
         return sb.toString();
     }
 }
