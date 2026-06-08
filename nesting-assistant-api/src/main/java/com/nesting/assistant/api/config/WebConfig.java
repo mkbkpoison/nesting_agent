@@ -15,9 +15,15 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class WebConfig implements WebMvcConfigurer {
 
     private final TokenInterceptor tokenInterceptor;
+    private final RateLimitingInterceptor rateLimitingInterceptor;
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
+        // 限流拦截器（优先）
+        registry.addInterceptor(rateLimitingInterceptor)
+                .addPathPatterns("/api/v1/chat/**");
+
+        // Token 认证拦截器
         registry.addInterceptor(tokenInterceptor)
                 .addPathPatterns("/api/v1/chat/**")      // 保护聊天接口
                 .addPathPatterns("/api/v1/knowledge/**")  // 保护知识库接口
