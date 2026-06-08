@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Sinks;
 
 import java.util.List;
 
@@ -69,60 +70,49 @@ public class NestingAssistantService {
     }
 
     /**
-     * 流式聊天响应
+     * 流式聊天响应 — 通过 Sinks.Many + 后台线程实现真正的 LLM Token 级流式推送。
      */
     public Flux<String> streamChat(ChatRequest request) {
         log.info("Processing streaming chat request: userId={}, message={}",
                 request.getUserId(), request.getMessage());
 
+        String userId = request.getUserId();
+        String message = request.getMessage();
+
         // 创建或获取会话
         String conversationId = conversationManager.createOrGetConversation(
-                request.getUserId(),
-                request.getConversationId(),
-                request.getMessage()
-        );
+                userId, request.getConversationId(), message);
         final String finalConversationId = conversationId;
 
         // 保存用户消息
-        conversationManager.addUserMessage(request.getUserId(), finalConversationId, request.getMessage());
+        conversationManager.addUserMessage(userId, finalConversationId, message);
 
-        // 先通过编排器获取完整响应
-        AgentResponse agentResponse = orchestrator.orchestrate(
-                finalConversationId,
-                request.getUserId(),
-                request.getMessage()
-        );
+        // 创建流式 Sink
+        Sinks.Many<String> sink = Sinks.many().unicast().onBackpressureBuffer();
 
-        String fullContent = agentResponse.getContent();
-        String agentRole = agentResponse.getAgentRole() != null ? agentResponse.getAgentRole().getCode() : null;
-        String intentType = agentResponse.getIntentType();
+        // 后台线程执行编排，实时推送 Token
+        Thread executorThread = new Thread(() -> {
+            try {
+                AgentResponse agentResponse = orchestrator.orchestrate(
+                        finalConversationId, userId, message,
+                        token -> sink.tryEmitNext(token));
 
-        // 保存助手响应
-        conversationManager.addAssistantMessage(
-                request.getUserId(), finalConversationId, fullContent,
-                agentRole, intentType
-        );
+                // 保存助手响应
+                conversationManager.addAssistantMessage(
+                        userId, finalConversationId, agentResponse.getContent(),
+                        agentResponse.getAgentRole() != null ? agentResponse.getAgentRole().getCode() : null,
+                        agentResponse.getIntentType());
 
-        // 刷新TTL
-        conversationManager.refreshTtl(request.getUserId(), finalConversationId);
-
-        // 按句子拆分输出
-        return Flux.create(sink -> {
-            String[] sentences = fullContent.split("(?<=[。！？.!?\n])");
-            for (String sentence : sentences) {
-                String trimmed = sentence.trim();
-                if (!trimmed.isEmpty()) {
-                    sink.next(trimmed);
-                    try {
-                        Thread.sleep(50);
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                        break;
-                    }
-                }
+                conversationManager.refreshTtl(userId, finalConversationId);
+                sink.tryEmitComplete();
+            } catch (Exception e) {
+                log.error("Streaming execution failed", e);
+                sink.tryEmitError(e);
             }
-            sink.complete();
-        });
+        }, "stream-chat-" + finalConversationId);
+        executorThread.start();
+
+        return sink.asFlux();
     }
 
     /**

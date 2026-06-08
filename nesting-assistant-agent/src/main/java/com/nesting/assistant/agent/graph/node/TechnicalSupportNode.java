@@ -49,10 +49,22 @@ public class TechnicalSupportNode implements GraphNode {
     @Override
     public GraphState process(GraphState state) {
         log.info("TechnicalSupportNode processing: {}", state.getUserMessage());
-        String response = chatClient.prompt()
+
+        StringBuilder responseBuilder = new StringBuilder();
+        chatClient.prompt()
                 .user(state.getUserMessage())
-                .call()
-                .content();
+                .stream()
+                .content()
+                .doOnNext(token -> {
+                    responseBuilder.append(token);
+                    if (state.getOnToken() != null) {
+                        state.getOnToken().accept(token);
+                    }
+                })
+                .collectList()
+                .block();
+        String response = responseBuilder.toString();
+
         state.addExecutionRecord(GraphState.NodeExecutionRecord.builder()
                 .nodeName(getName()).role(AgentRole.TECHNICAL_SUPPORT)
                 .inputSummary(state.getUserMessage()).outputSummary(response)

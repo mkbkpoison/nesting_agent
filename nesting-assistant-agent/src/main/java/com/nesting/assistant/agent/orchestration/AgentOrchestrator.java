@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.function.Consumer;
 
 /**
  * 智能体编排器。
@@ -50,7 +51,8 @@ public class AgentOrchestrator {
         log.info("AgentGraph initialized: 5 nodes, entry=router, 4 sub-nodes -> router loop");
     }
 
-    public AgentResponse orchestrate(String conversationId, String userId, String userMessage) {
+    public AgentResponse orchestrate(String conversationId, String userId, String userMessage,
+                                     Consumer<String> onToken) {
         log.info("Orchestrating: userId={}, conversationId={}, messageLen={}",
                 userId, conversationId, userMessage != null ? userMessage.length() : 0);
 
@@ -63,6 +65,7 @@ public class AgentOrchestrator {
                 .userId(userId != null ? userId : "default")
                 .userMessage(userMessage)
                 .history(history)
+                .onToken(onToken)
                 .sharedData(new HashMap<>())
                 .maxSteps(10)
                 .build();
@@ -82,6 +85,11 @@ public class AgentOrchestrator {
         log.info("Orchestration complete: {} steps, contentLen={}",
                 state.getStepCount(), content != null ? content.length() : 0);
         return response;
+    }
+
+    /** 无回调版本（同步调用） */
+    public AgentResponse orchestrate(String conversationId, String userId, String userMessage) {
+        return orchestrate(conversationId, userId, userMessage, null);
     }
 
     private String buildFinalResponse(GraphState state) {

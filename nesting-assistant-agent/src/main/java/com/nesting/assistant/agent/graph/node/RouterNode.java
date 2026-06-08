@@ -112,10 +112,20 @@ public class RouterNode implements GraphNode {
                 state.buildHistoryPrompt(),
                 state.buildHistorySummary());
 
-        String response = chatClient.prompt()
+        StringBuilder responseBuilder = new StringBuilder();
+        chatClient.prompt()
                 .user(userPrompt)
-                .call()
-                .content();
+                .stream()
+                .content()
+                .doOnNext(token -> {
+                    responseBuilder.append(token);
+                    if (state.getOnToken() != null) {
+                        state.getOnToken().accept(token);
+                    }
+                })
+                .collectList()
+                .block();
+        String response = responseBuilder.toString();
 
         log.debug("RouterNode raw response: {}", response);
 

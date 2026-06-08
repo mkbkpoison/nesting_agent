@@ -52,6 +52,9 @@ public class GraphState {
     /** 最大步数（防无限循环，默认10步） */
     private int maxSteps;
 
+    /** Token 级流式回调（由 NestingAssistantService 设置，节点实时推送） */
+    private java.util.function.Consumer<String> onToken;
+
     /** 是否已终止 */
     private boolean terminated;
 
