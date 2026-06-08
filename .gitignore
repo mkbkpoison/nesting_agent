@@ -1,37 +1,38 @@
-# ==================== Maven ====================
+# Maven
 target/
 *.jar
 *.war
 *.zip
 *.tar.gz
-*.log
+*.class
 
-# ==================== IntelliJ IDEA ====================
+# IDE
 .idea/
 *.iml
 *.iws
 *.ipr
-
-# ==================== VS Code ====================
 .vscode/
-*.code-workspace
+.settings/
+.project
+.classpath
+*.prefs
 
-# ==================== OS ====================
+# OS
 .DS_Store
 Thumbs.db
 *.swp
 *~
 
-# ==================== Environment ====================
-.env
-.env.local
-*.env
-
-# ==================== Logs ====================
-logs/
+# Logs
 *.log
 
-# ==================== Config (contains keys & passwords) ====================
+# Environment
+.env
+*.env.local
+
+# Node
+node_modules/
+
 **/application.yml
 **/application-dev.yml
 **/application-prod.yml

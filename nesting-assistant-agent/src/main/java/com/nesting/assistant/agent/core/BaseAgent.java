@@ -40,6 +40,17 @@ public abstract class BaseAgent {
     }
 
     /**
+     * 构建一个简单的上下文（供委派工具使用）
+     */
+    public AgentContext buildContext(String userMessage) {
+        return AgentContext.builder()
+                .userMessage(userMessage)
+                .sharedData(new java.util.HashMap<>())
+                .toolCallResults(new java.util.ArrayList<>())
+                .build();
+    }
+
+    /**
      * 构建增强提示词
      */
     protected String buildEnhancedPrompt(AgentContext context) {

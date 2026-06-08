@@ -22,9 +22,9 @@ public class InitialKnowledgeLoader implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) {
         log.info("Loading initial knowledge base...");
-        loadErrorCodes();
-        loadFAQs();
-        loadBestPractices();
+//        loadErrorCodes();
+//        loadFAQs();
+//        loadBestPractices();
         log.info("Initial knowledge base loaded successfully");
     }
 
