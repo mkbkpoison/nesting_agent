@@ -44,12 +44,20 @@ public class DatabaseCheckTool {
             result.put("autoCommit", conn.getAutoCommit());
             result.put("readOnly", conn.isReadOnly());
 
-            // 模拟连接池状态
+            // 连接池状态（如果使用的是 HikariCP）
             Map<String, Object> poolStats = new LinkedHashMap<>();
-            poolStats.put("activeConnections", 5);
-            poolStats.put("idleConnections", 10);
-            poolStats.put("maxConnections", 20);
-            poolStats.put("pendingRequests", 0);
+            try {
+                if (dataSource instanceof com.zaxxer.hikari.HikariDataSource hikariDS) {
+                    poolStats.put("activeConnections", hikariDS.getHikariPoolMXBean().getActiveConnections());
+                    poolStats.put("idleConnections", hikariDS.getHikariPoolMXBean().getIdleConnections());
+                    poolStats.put("maxConnections", hikariDS.getMaximumPoolSize());
+                    poolStats.put("pendingRequests", hikariDS.getHikariPoolMXBean().getThreadsAwaitingConnection());
+                } else {
+                    poolStats.put("note", "Not using HikariCP, pool metrics unavailable");
+                }
+            } catch (Exception e) {
+                poolStats.put("note", "Pool metrics unavailable: " + e.getMessage());
+            }
             result.put("poolStats", poolStats);
 
         } catch (Exception e) {
